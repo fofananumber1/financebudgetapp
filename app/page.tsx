@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -8,13 +9,25 @@ export default function HomePage() {
         Some placeholder text here. This is the homepage for this app, there will be a place to upload CSV
         files and input expense data soon!
       </p>
-      <div>
-        <a
-          href="/upload"
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Upload A File (CSV only)
-        </a>
+      <div className="space-x-4">
+        <Link href="/upload">
+          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Upload File (CSV only)
+          </button>
+        </Link>
+
+        <Link href="/expenses">
+          <button className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            View Expenses
+          </button>
+        </Link>
+
+        <Link href="/dashboard">
+          <button className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            Dashboard
+          </button>
+        </Link>
+        
       </div>
     </main>
   )
