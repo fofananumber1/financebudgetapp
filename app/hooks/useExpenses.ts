@@ -36,10 +36,12 @@ export default function useExpenses() {
 
     //creates a new array with the item that was added
         setExpenses([...expenses, { id: nextId, ...exp }]);
+    }
 
     function deleteExpense(id: number) {
         setExpenses(expenses.filter((e) => e.id !== id));
     }
-    }
 
+    return { expenses, addExpense, deleteExpense };
 }
+
