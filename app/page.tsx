@@ -7,7 +7,7 @@ export default function HomePage() {
       <h1 className="text-black text-6xl font-bold mb-20">Budget App</h1>
       <p className="text-lg text-gray-700 mb-8">
         Some placeholder text here. This is the homepage for this app, there will be a place to upload CSV
-        files and input expense data soon!
+        files soon!
       </p>
       <div className="space-x-4">
         <Link href="/upload">

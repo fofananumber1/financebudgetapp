@@ -1,11 +1,10 @@
 import React from 'react';
+import AppShell from '../components/appShell';
 
 export default function DashboardPage() {
     return (
-    <main className="min-h-screen bg-white p-8">
-        <p className="text-lg text-black mb-8">
-            Dashboard Page
-        </p>
-    </main>
+    <AppShell>
+        <div className="text-gray-800">Dashboard</div>
+    </AppShell>
     );
 }

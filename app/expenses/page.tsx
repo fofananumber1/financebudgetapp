@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import useExpenses from '@/app/hooks/useExpenses';
+import AppShell from '../components/appShell';
 import { totalmem } from 'os';
 
 export default function ExpensesPage() {
@@ -44,6 +45,7 @@ export default function ExpensesPage() {
         );
 
     return (
+        <AppShell>
         <main className="min-h-screen bg-white p-8">
             <h1 className="text-3xl font-bold mb-6 text-black">Expenses</h1>
 
@@ -99,7 +101,7 @@ export default function ExpensesPage() {
 
             {/* Expenses Table */}
             <div className="overflow-x-auto">
-                <table className="w-full table-auto border-collapse">
+                <table className="w-full table-auto">
                     <thead>
                         <tr className="text-black">
                             <th className="border p-2 text-left">Date</th>
@@ -150,6 +152,7 @@ export default function ExpensesPage() {
             </div>
 
         </main>
+        </AppShell>
     )
     
 }
