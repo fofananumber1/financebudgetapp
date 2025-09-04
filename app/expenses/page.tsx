@@ -1,12 +1,38 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import useExpenses from '@/app/hooks/useExpenses';
 import AppShell from '../components/appShell';
 import { totalmem } from 'os';
+import { listExpenses, createExpense } from '@/lib/expenses';
 
 export default function ExpensesPage() {
     const { expenses, addExpense, deleteExpense } = useExpenses();
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    //initial load
+    useEffect(() => {
+        (async () => {
+            try {
+                const data = await listExpenses();
+                setItems(data);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        const payload = {
+            date: String(fd.get('date') || ''),
+            category: String(fd.get('category') || ''),
+            amount: String(fd.get('amount') || '') // <-- as STRING
+            description: String(fd.get('description') || ''),
+        };
+    }
 
     const [form, setForm] = useState({
         date: '',

@@ -37,9 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
-    'rest_framework',
-    'expenses',
+    'corsheaders', #CORS support for browsers
+    'rest_framework', # Django REST Framework
+    'expenses', # from app
 ]
 
 MIDDLEWARE = [
@@ -57,6 +57,11 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000"
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+}
 
 ROOT_URLCONF = 'finance_backend.urls'
 
