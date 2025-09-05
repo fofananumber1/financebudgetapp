@@ -1,15 +1,21 @@
 'use client';
 
+console.log('API base:', process.env.NEXT_PUBLIC_API_BASE);
+
 import React, { useMemo, useState, useEffect } from 'react';
 import useExpenses from '@/app/hooks/useExpenses';
 import AppShell from '../components/appShell';
 import { totalmem } from 'os';
-import { listExpenses, createExpense } from '@/lib/expenses';
+import { listExpenses, createExpense, type Expense } from '@/lib/expenses';
 
 export default function ExpensesPage() {
     const { expenses, addExpense, deleteExpense } = useExpenses();
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+    console.log('API base:', process.env.NEXT_PUBLIC_API_BASE);
+    }, []);
 
     //initial load
     useEffect(() => {
@@ -23,15 +29,21 @@ export default function ExpensesPage() {
         })();
     }, []);
 
-    async function handleSubmit(e) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
+
+        //keep amount as STRING to play nice with Django DecimalField
         const payload = {
-            date: String(fd.get('date') || ''),
-            category: String(fd.get('category') || ''),
-            amount: String(fd.get('amount') || '') // <-- as STRING
-            description: String(fd.get('description') || ''),
+            date: String(fd.get('date') ?? ''),
+            category: String(fd.get('category') ?? ''),
+            amount: String(fd.get('amount') ?? ''), // <-- as STRING
+            description: String(fd.get('description') ?? ''),
         };
+
+        const created = await createExpense(payload);
+        setItems((cur) => [created, ...cur]);
+        e.currentTarget.reset();
     }
 
     const [form, setForm] = useState({
@@ -71,114 +83,80 @@ export default function ExpensesPage() {
         );
 
     return (
-        <AppShell>
-        <main className="min-h-screen bg-white p-8">
-            <h1 className="text-3xl font-bold mb-6 text-black">Expenses</h1>
+    <div className="space-y-4 p-4 bg-white">
+      <form onSubmit={handleSubmit} className="flex items-end gap-2">
+        <label className="flex flex-col">
+          <span className="text-sm text-black">Date</span>
+          <input
+            name="date"
+            type="date"
+            className="border border-black px-3 py-2 rounded-md"
+            required
+          />
+        </label>
 
-            {/* Add Expense Form */}
-            <form
-                onSubmit={handleAdd}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-            >
-                <input
-                    type="date"
-                    name="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="border rounded p-2 text-gray-400"
-                    required
-                />
-                <input
-                    type="text"
-                    name="category"
-                    placeholder="Category"
-                    value={form.category}
-                    onChange={handleChange}
-                    className="border rounded p-2 text-gray-400"
-                    required
-                />
-                <input
-                    type="number"
-                    name="amount"
-                    placeholder="Amount"
-                    value={form.amount}
-                    onChange={handleChange}
-                    className="border rounded p-2 text-gray-400"
-                    step="0.01"
-                    min="0"
-                    required
-                />
-                <input
-                    type="text"
-                    name="description"
-                    placeholder="Description (optional)"
-                    value={form.description}
-                    onChange={handleChange}
-                    className="border rounded p-2 text-gray-400"
-                />
+        <label className="flex flex-col">
+          <span className="text-sm text-black">Category</span>
+          <input
+            name="category"
+            className="border border-black px-3 py-2 rounded-md"
+            required
+          />
+        </label>
 
-                <button
-                    type="submit"
-                    className="col-span-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                >
-                    Add Expense
+        <label className="flex flex-col">
+          <span className="text-sm text-black">Amount</span>
+          <input
+            name="amount"
+            inputMode="decimal"
+            className="border border-black px-3 py-2 rounded-md"
+            required
+          />
+        </label>
+
+        <label className="flex-1 flex flex-col">
+          <span className="text-sm text-black">Description</span>
+          <input 
+          name="description" 
+          className="border border-black px-3 py-2 rounded-md " />
+        </label>
+
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center rounded-md
+                     bg-indigo-600 px-4 py-2 text-white text-sm text-black font-medium
+                     shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          Add
+        </button>
+    
+      </form>
+
+      {loading ? (
+        <p>Loading…</p>
+      ) : (
+        
+        <ul className="divide-y">
+          {items.map((e) => (
+            <li key={e.id} className="py-2 flex items-center text-black">
+                <div className="ml-auto flex gap-10 items-left">
+                    <span>
+                        {e.date} · {e.category}
+                    </span>
+                    <span>${e.amount}</span>
+              </div>
+              <button
+                    className="inline-flex items-center rounded-md
+                       bg-red-600 px-4 py-2 text-white text-sm text-black font-medium
+                       shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >   
+                    Delete
                 </button>
-            </form>
-
-            {/* Expenses Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full table-auto">
-                    <thead>
-                        <tr className="text-black">
-                            <th className="border p-2 text-left">Date</th>
-                            <th className="border p-2 text-left">Category</th>
-                            <th className="border p-2 text-right">Amount</th>
-                            <th className="border p-2 text-left">Description</th>
-                            <th className="border p-2 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {expenses.length > 0 ? (
-                            expenses.map((exp) => (
-                                <tr key={exp.id} className="hover:bg-blue-50">
-                                    <td className="border p-2 border-black text-black">{exp.date}</td>
-                                    <td className="border p-2 border-black text-black">{exp.category}</td>
-                                    <td className="border p-2 border-black text-right text-black">${exp.amount.toFixed(2)}</td>
-                                    <td className="border p-2 border-black text-black">{exp.description}</td>
-                                    <td className="border p-2 border-black text-center text-black">
-                                        <button
-                                            onClick={() => deleteExpense(exp.id)}
-                                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={5} className="border p-4 text-center text-gray-500 border-black">
-                                    No expenses yet.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                    <tfoot>
-                        <tr className="text-gray-400">
-                            <td className="border p-2 font-bold text-blue-700 border-black" colSpan={2}>
-                                Total
-                            </td>
-                            <td className="border p-2 text-right font-semibold text-blue-700 border-black">
-                                ${total.toFixed(2)}
-                            </td>
-                            <td className="border p-2 border-black" colSpan={2}></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-        </main>
-        </AppShell>
-    )
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
     
 }
