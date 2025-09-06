@@ -29,4 +29,11 @@ export async function createExpense(input: {
   return res.json();
 
 }
+
+export async function deleteExpense(id: number): Promise<void> {
+  // NOTE the trailing slash after the id - DRF routers expect it
+  const res = await fetch(`${API}/expenses/${id}/`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+  // DRF responds 204 No Content on success; nothing to return
+}
   

@@ -6,12 +6,13 @@ import React, { useMemo, useState, useEffect } from 'react';
 import useExpenses from '@/app/hooks/useExpenses';
 import AppShell from '../components/appShell';
 import { totalmem } from 'os';
-import { listExpenses, createExpense, type Expense } from '@/lib/expenses';
+import { listExpenses, createExpense, deleteExpense, type Expense } from '@/lib/expenses';
 
 export default function ExpensesPage() {
-    const { expenses, addExpense, deleteExpense } = useExpenses();
+    const { expenses, addExpense} = useExpenses();
     const [items, setItems] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState<Set<number>>(new Set()); // track in-flight deletes
     
     useEffect(() => {
     console.log('API base:', process.env.NEXT_PUBLIC_API_BASE);
@@ -44,6 +45,26 @@ export default function ExpensesPage() {
         const created = await createExpense(payload);
         setItems((cur) => [created, ...cur]);
         e.currentTarget.reset();
+    }
+
+    async function handleDelete(id: number) {
+        setDeleting(prev => new Set(prev).add(id));
+        const prevItems = items;
+        setItems(cur => cur.filter(e => e.id !== id)); 
+
+        try {
+            await deleteExpense(id);
+        } catch (err) {
+            // rollback UI if backend fails
+            setItems(prevItems);
+            alert(err instanceof Error ? err.message : 'Failed to delete.');
+        } finally {
+            setDeleting(prev => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+        }
     }
 
     const [form, setForm] = useState({
@@ -138,19 +159,23 @@ export default function ExpensesPage() {
         
         <ul className="divide-y">
           {items.map((e) => (
-            <li key={e.id} className="py-2 flex items-center text-black">
-                <div className="ml-auto flex gap-10 items-left">
+            <li key={e.id} className="py-2 flex text-black">
+                <div className="flex w-full gap-10 items-center justify-start">
                     <span>
-                        {e.date} · {e.category}
+                        {e.date} · {e.category} · {e.description}
                     </span>
                     <span>${e.amount}</span>
               </div>
               <button
-                    className="inline-flex items-center rounded-md
+                    type="button"
+                    onClick={() => handleDelete(e.id)}
+                    disabled={deleting.has(e.id)}
+                    className="inline-flex items-center rounded-md justify-right
                        bg-red-600 px-4 py-2 text-white text-sm text-black font-medium
-                       shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                       shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500
+                       aria-busy={deleting.has(e.id)}"
                 >   
-                    Delete
+                    {deleting.has(e.id) ? 'Deleting...' : 'Delete'}
                 </button>
             </li>
           ))}
